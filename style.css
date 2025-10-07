@@ -1,0 +1,123 @@
+/* Importa a fonte Montserrat do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+/* Define variáveis de cores para facilitar a customização */
+:root {
+    --background-color: #0a1018; /* Azul quase preto */
+    --container-color: #1e2a47; /* Azul escuro para o container */
+    --border-color: #c8aa6e;    /* Dourado Hextech */
+    --text-color: #f0f0f0;       /* Branco suave */
+    --text-muted-color: #a0a0a0; /* Cinza claro para textos secundários */
+    --font-primary: 'Montserrat', sans-serif;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    margin: 0;
+}
+
+h1 {
+    font-weight: 700;
+    color: var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 40px;
+}
+
+/* Estilos básicos que já tínhamos, agora usando as variáveis */
+#ranking-container {
+    width: 80%;
+    max-width: 800px;
+    background-color: var(--container-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.player-row {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #33487c; /* Borda interna mais sutil */
+    align-items: center;
+}
+
+.player-rank {
+    font-size: 1.5em;
+    font-weight: 700;
+    width: 60px;
+    color: var(--border-color);
+}
+
+.player-info h3 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.player-info p {
+    margin: 5px 0 0;
+    color: var(--text-muted-color);
+}
+
+#ranking-container {
+    border: 2px solid var(--border-color);
+    border-radius: 8px; /* Cantos arredondados */
+    overflow: hidden; /* Garante que os filhos respeitem os cantos arredondados */
+}
+
+.player-row {
+    gap: 20px; /* Espaçamento moderno entre os elementos */
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Animação suave */
+}
+
+/* Remove a borda do último jogador da lista */
+.player-row:last-child {
+    border-bottom: none;
+}
+
+/* Efeito ao passar o mouse */
+.player-row:hover {
+    background-color: #2a3a5e; /* Um pouco mais claro para destacar */
+    transform: scale(1.02); /* Efeito de zoom sutil */
+    cursor: pointer;
+}
+
+#loading, .player-row p {
+    font-size: 0.9em;
+}
+
+/* Cores dinâmicas baseadas no Elo */
+.player-row {
+    border-left: 5px solid transparent; /* Borda inicial transparente */
+}
+
+.tier-challenger { border-left-color: #f4c3f4; }
+.tier-grandmaster { border-left-color: #cd4444; }
+.tier-master { border-left-color: #9d48e0; }
+.tier-diamond { border-left-color: #57a5e8; }
+.tier-emerald { border-left-color: #2ecc71; }
+.tier-platinum { border-left-color: #4e9a99; }
+.tier-gold { border-left-color: #f1c40f; }
+.tier-silver { border-left-color: #b4c2ce; }
+.tier-bronze { border-left-color: #bf734c; }
+.tier-iron { border-left-color: #5e5c5c; }
+
+/* Estilos para a nova imagem do elo */
+.rank-emblem {
+    width: 120px;  /* Aumentado de 64px para 80px */
+    height: 80px; /* Aumentado de 64px para 80px */
+    object-fit: contain; 
+    margin-right: 15px; /* Um pouco mais de espaço para não ficar colado */
+    flex-shrink: 0; /* Garante que a imagem não encolha em telas pequenas */
+}
+
+/* Pequeno ajuste no layout do cartão do jogador */
+.player-row {
+    padding: 15px 20px; /* Aumentado ligeiramente para cima/baixo */
+}
