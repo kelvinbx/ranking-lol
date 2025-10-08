@@ -57,7 +57,13 @@ function displayRanking(playerData) {
 
     playerData.forEach((player, index) => {
         const playerLink = document.createElement('a');
-        playerLink.href = `https://www.op.gg/summoners/br/puuid-${player.puuid}`;
+        
+        // ===== MUDANÇA IMPORTANTE: Construir o link com Nome-Tag =====
+        // Junta o gameName e a tagLine com um hífen (ex: "Dorrows-0488")
+        const opggName = `${player.gameName}-${player.tagLine}`;
+        playerLink.href = `https://www.op.gg/summoners/br/${encodeURIComponent(opggName)}`;
+        // ==========================================================
+        
         playerLink.target = "_blank";
         playerLink.rel = "noopener noreferrer";
         
