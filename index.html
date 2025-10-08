@@ -4,17 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ranking de Lendas</title>
-    <link rel="stylesheet" href="style.css?v=1.0.0">
-</head>
+    <link rel="stylesheet" href="style.css?v=3.0.0"> </head>
 <body>
     <h1>Ranking dos Invocadores</h1>
 
     <button id="refresh-button">Atualizar Rankings</button>
 
-    <div id="loading">Carregando dados da Riot API...</div>
-    <div id="ranking-container">
-        </div>
+    <div id="skeleton-loader">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+    </div>
+
+    <div id="ranking-container"></div>
     
-    <script src="script.js?v=1.0.0"></script>
-</body>
+    <footer>
+        <p>[Ranking dos Invocadores] não é endossado pela Riot Games e não reflete as visões ou opiniões da Riot Games ou de qualquer pessoa oficialmente envolvida na produção ou gestão das propriedades da Riot Games. Riot Games e todas as propriedades associadas são marcas comerciais ou marcas registadas da Riot Games, Inc.</p>
+    </footer>
+    
+    <script src="script.js?v=3.0.0"></script> </body>
 </html>

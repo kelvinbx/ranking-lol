@@ -1,3 +1,6 @@
+/* Importa a fonte Montserrat do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
 /* Define variáveis de cores para facilitar a customização */
 :root {
     --background-color: #0a1018; /* Azul quase preto */
@@ -209,4 +212,23 @@ h1 {
 #ranking-container a:last-child {
     border-bottom: none;
 }
+/* Estilos para o saldo de PDL */
+.lp-gain {
+    color: #2ecc71; /* Verde */
+    font-weight: 600;
+}
 
+.lp-loss {
+    color: #e74c3c; /* Vermelho */
+    font-weight: 600;
+}
+footer {
+    margin-top: 50px;
+    max-width: 800px;
+    text-align: center;
+    font-size: 0.7em;
+    color: var(--text-muted-color);
+}
+#skeleton-loader { width: 80%; max-width: 800px; }
+.skeleton-card { background-color: var(--container-color); border: 2px solid #33487c; border-radius: 8px; height: 100px; margin-bottom: 2px; opacity: 0.5; animation: skeleton-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes skeleton-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
