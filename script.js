@@ -1,6 +1,5 @@
 // =======================================================
-//        SCRIPT.JS - VERSÃO FINAL E FUNCIONAL
-//        (Usando o método /entries/by-puuid/)
+//        SCRIPT.JS - VERSÃO COM NOVAS FUNCIONALIDADES
 // =======================================================
 
 // --- ÁREA DE CONFIGURAÇÃO ---
@@ -10,7 +9,6 @@ const riotIds = [
     "Atziluth#537",
     "gordaker#prata",
     "Dorrows#0488"
-    // Adicione aqui outros Riot IDs que você queira ranquear
 ];
 
 const region = "br1"; 
@@ -35,17 +33,17 @@ const tierImages = {
     "IRON": "https://raw.communitydragon.org/14.18/plugins/rcp-fe-lol-static-assets/global/default/ranked-emblem/emblem-iron.png"
 };
 
-async function main() {
-    const playerData = [];
+// Função principal, agora chamada para buscar e exibir os dados
+async function fetchAndDisplayRanks() {
     const loadingElement = document.getElementById('loading');
+    const container = document.getElementById('ranking-container');
     
-    for (const id of riotIds) {
-        await new Promise(resolve => setTimeout(resolve, 250)); 
-        const data = await getSummonerRank(id);
-        if (data) {
-            playerData.push(data);
-        }
-    }
+    loadingElement.style.display = 'block';
+    container.innerHTML = '';
+
+    // Usamos Promise.all para buscar os dados de todos os jogadores em paralelo, o que é mais rápido
+    const playerDataPromises = riotIds.map(id => getSummonerRank(id));
+    const playerData = (await Promise.all(playerDataPromises)).filter(p => p !== null);
 
     playerData.sort((a, b) => {
         if (a.tierValue !== b.tierValue) return b.tierValue - a.tierValue;
@@ -57,48 +55,61 @@ async function main() {
     displayRanking(playerData);
 }
 
-// Função de busca de ranking, agora simplificada para 2 passos
+// Função de busca de ranking com a adição da verificação de Jogo Ao Vivo
 async function getSummonerRank(fullRiotId) {
     try {
         const parts = fullRiotId.split('#');
-        const gameName = encodeURIComponent(parts[0]);
-        const tagLine = encodeURIComponent(parts[1]);
+        const gameName = parts[0];
+        const tagLine = parts[1];
 
         if (!gameName || !tagLine) {
             throw new Error(`Riot ID inválido no array: '${fullRiotId}'`);
         }
 
-        // ETAPA 1: Converte o Riot ID para um PUUID. (Continua igual)
-        const accountUrl = `https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${gameName}/${tagLine}?api_key=${RIOT_API_KEY}`;
+        const encodedGameName = encodeURIComponent(gameName);
+        const encodedTagLine = encodeURIComponent(tagLine);
+
+        // ETAPA 1: Converte o Riot ID para um PUUID.
+        const accountUrl = `https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodedGameName}/${encodedTagLine}?api_key=${RIOT_API_KEY}`;
         const accountResponse = await fetch(accountUrl);
         if (!accountResponse.ok) throw new Error(`Riot ID não encontrado: ${fullRiotId}`);
         const accountData = await accountResponse.json();
         
-        // ETAPA 2: Usa o PUUID para buscar o ELO diretamente (NOVO MÉTODO!)
-        const rankUrl = `https://${region}.api.riotgames.com/lol/league/v4/entries/by-puuid/${accountData.puuid}?api_key=${RIOT_API_KEY}`;
+        // ETAPA 2: Usa o PUUID para buscar o ELO diretamente
+        const rankUrl = `https://br1.api.riotgames.com/lol/league/v4/entries/by-puuid/${accountData.puuid}?api_key=${RIOT_API_KEY}`;
         const rankResponse = await fetch(rankUrl);
         if (!rankResponse.ok) throw new Error(`Dados de ranking não encontrados para o PUUID: ${accountData.puuid}`);
         const rankData = await rankResponse.json();
         
-        if (!Array.isArray(rankData)) {
+        if (!Array.isArray(rankData) || rankData.length === 0) {
             console.log(`Dados de ranking para '${fullRiotId}' não retornaram uma lista.`);
             return null;
         }
         
         const soloQueueData = rankData.find(q => q.queueType === "RANKED_SOLO_5x5");
         
-        if (soloQueueData) {
-            // Precisamos adicionar o summonerName manualmente, pois este método não o retorna.
-            // Usamos o gameName do Riot ID como substituto.
-            return { 
-                ...soloQueueData, 
-                summonerName: gameName, // Adicionando o nome do jogador
-                tierValue: tierValues[soloQueueData.tier] || 0, 
-                rankValue: rankValues[soloQueueData.rank] || 0 
-            };
+        if (!soloQueueData) return null;
+
+        // ETAPA 3 (BÓNUS): Verificar se o jogador está em partida
+        let isLive = false;
+        try {
+            // Este endpoint precisa do 'summonerId', que vem nos dados do ranking (soloQueueData)
+            const spectatorUrl = `https://${region}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/${soloQueueData.summonerId}?api_key=${RIOT_API_KEY}`;
+            const spectatorResponse = await fetch(spectatorUrl);
+            if (spectatorResponse.ok) {
+                isLive = true;
+            }
+        } catch (e) {
+            // Se der erro (normalmente 404), o jogador não está em jogo. Não fazemos nada.
         }
 
-        return null; 
+        return { 
+            ...soloQueueData, 
+            summonerName: fullRiotId, 
+            isLive: isLive, // Adiciona o status de "em jogo"
+            tierValue: tierValues[soloQueueData.tier] || 0, 
+            rankValue: rankValues[soloQueueData.rank] || 0 
+        };
 
     } catch (error) {
         console.error(`Falha no processo para '${fullRiotId}':`, error);
@@ -106,7 +117,7 @@ async function getSummonerRank(fullRiotId) {
     }
 }
 
-// SUBSTITUA A SUA FUNÇÃO displayRanking INTEIRA POR ESTA
+// Função de exibição com as novas informações
 function displayRanking(playerData) {
     const container = document.getElementById('ranking-container');
     container.innerHTML = ""; 
@@ -117,22 +128,46 @@ function displayRanking(playerData) {
     }
 
     playerData.forEach((player, index) => {
+        const playerLink = document.createElement('a');
+        const opggName = player.summonerName.replace('#', '-');
+        playerLink.href = `https://www.op.gg/summoners/br/${encodeURIComponent(opggName)}`;
+        playerLink.target = "_blank";
+        playerLink.rel = "noopener noreferrer";
+        
         const playerDiv = document.createElement('div');
-        // Adiciona a classe CSS para a cor da borda dinâmica
         playerDiv.className = `player-row tier-${player.tier.toLowerCase()}`;
         
-        // O HTML agora inclui a tag <img> para o emblema do elo
+        // Calcular Win Rate
+        const totalGames = player.wins + player.losses;
+        const winRate = totalGames > 0 ? ((player.wins / totalGames) * 100).toFixed(1) : 0;
+
         playerDiv.innerHTML = `
             <img class="rank-emblem" src="${tierImages[player.tier] || ''}" alt="Emblema do Elo ${player.tier}">
             <div class="player-rank">#${index + 1}</div>
             <div class="player-info">
-                <h3>${decodeURIComponent(player.summonerName)}</h3>
+                <h3>
+                    ${player.summonerName.split('#')[0]}
+                    ${player.hotStreak ? '<span class="hot-streak" title="Em sequência de vitórias!">🔥</span>' : ''}
+                    ${player.isLive ? '<span class="live-indicator" title="Em partida!"></span>' : ''}
+                </h3>
                 <p>${player.tier} ${player.rank} - ${player.leaguePoints} PDL</p>
                 <p>Vitórias: ${player.wins} | Derrotas: ${player.losses}</p>
+                <p>Win Rate: <strong>${winRate}%</strong> (${totalGames} jogos)</p>
             </div>
         `;
-        container.appendChild(playerDiv);
+        
+        playerLink.appendChild(playerDiv);
+        container.appendChild(playerLink);
     });
 }
 
-main();
+// --- LÓGICA DE INICIALIZAÇÃO E BOTÃO ---
+
+// Pega o botão do HTML
+const refreshBtn = document.getElementById('refresh-button');
+
+// Quando o botão for clicado, executa a função de busca
+refreshBtn.addEventListener('click', fetchAndDisplayRanks);
+
+// Chama a função uma vez quando a página carrega pela primeira vez
+fetchAndDisplayRanks();
